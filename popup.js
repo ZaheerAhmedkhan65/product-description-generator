@@ -1,79 +1,42 @@
-const API_KEY = "AIzaSyD-8bbZ_bbinJNxMAczh12BDWL1T9-S064";
+// Popup Script - Simple action buttons that trigger content script actions
 
-const STATIC_PROMPT = `
-You are an expert marketplace product copywriter.
+document.addEventListener('DOMContentLoaded', () => {
+  const generateBtn = document.getElementById("generateBtn");
+  const settingsBtn = document.getElementById("settingsBtn");
+  const statusEl = document.getElementById("status");
 
-Rules:
-- Write SEO-friendly content
-- Plagiarism-free
-- Simple English
-- Use {{productName}} instead of the actual product name
+  if (generateBtn) {
+    generateBtn.addEventListener("click", async () => {
+      updateStatus("Sending generate request...");
 
-Generate:
-1. Short Description (40–60 words)
-2. Long Description (120–150 words)
-
-Output format:
-Short Description:
-<text>
-
-Long Description:
-<text>
-`;
-
-document.getElementById("generateBtn").addEventListener("click", async () => {
-  const productName = document.getElementById("productName").value.trim();
-
-  if (!productName) {
-    alert("Please enter a product name");
-    return;
+      // Send message to content script
+      try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tabs[0]) {
+          chrome.tabs.sendMessage(tabs[0].id, { type: 'GENERATE_DESCRIPTION' }, (response) => {
+            if (chrome.runtime.lastError) {
+              updateStatus("Error: " + chrome.runtime.lastError.message);
+            } else {
+              updateStatus("Descriptions generated!");
+            }
+          });
+        }
+      } catch (error) {
+        updateStatus("Error: " + error.message);
+      }
+    });
   }
 
-  document.getElementById("shortDesc").innerText = "Generating...";
-  document.getElementById("longDesc").innerText = "";
-
-  const prompt = `${STATIC_PROMPT}\nProduct name: ${productName}`;
-
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }]
-            }
-          ]
-        })
-      }
-    );
-
-    const data = await response.json();
-    console.log("Gemini response:", data);
-
-    if (!data.candidates?.length) {
-      throw new Error(data.error?.message || "No text generated");
-    }
-
-    const text = data.candidates[0].content.parts[0].text;
-
-    const shortMatch = text.match(/Short Description:\s*([\s\S]*?)Long Description:/i);
-    const longMatch = text.match(/Long Description:\s*([\s\S]*)/i);
-
-    document.getElementById("shortDesc").innerText =
-      shortMatch ? shortMatch[1].trim() : "Short description not found";
-
-    document.getElementById("longDesc").innerText =
-      longMatch ? longMatch[1].trim() : "Long description not found";
-
-  } catch (error) {
-    console.error("Generation error:", error);
-    document.getElementById("shortDesc").innerText =
-      "Error: " + error.message;
+  if (settingsBtn) {
+    settingsBtn.addEventListener("click", () => {
+      chrome.runtime.openOptionsPage();
+    });
   }
 });
+
+function updateStatus(message) {
+  const statusEl = document.getElementById("status");
+  if (statusEl) {
+    statusEl.textContent = message;
+  }
+}
