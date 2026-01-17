@@ -1,10 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "AI Product Description Generator",
-  "description": "Generate SEO-friendly product descriptions using AI.",
+  "name": "Product Description Generator",
+  "description": "Generate SEO-friendly product descriptions using Product Description Generator.",
   "version": "1.0.0",
   "action": {
-    "default_popup": "popup.html"
+    "default_icon": {
+      "16": "src/icons/icon_16.png",
+      "32": "src/icons/icon_32.png",
+      "48": "src/icons/icon_48.png",
+      "128": "src/icons/icon_128.png"
+    },
+    "default_popup": "src/views/popup.html"
+  },
+  "options_ui": {
+    "page": "src/views/settings.html",
+    "open_in_tab": true
   },
   "permissions": [
     "activeTab",
@@ -16,17 +26,34 @@
     "https://generativelanguage.googleapis.com/*"
   ],
   "icons": {
-    "128": "icons/icon128.png"
-  }
-  ,
+    "16": "src/icons/icon_16.png",
+    "32": "src/icons/icon_32.png",
+    "48": "src/icons/icon_48.png",
+    "128": "src/icons/icon_128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/icons/icon_48.png"
+      ],
+      "matches": [
+        "https://onlinesalepoint.com/*"
+      ]
+    }
+  ],
+  "background": {
+    "service_worker": "src/scripts/background.js",
+    "type": "module"
+  },
   "content_scripts": [
     {
       "matches": [
         "https://onlinesalepoint.com/shop/products/*/edit"
       ],
       "js": [
-        "content.js"
+        "src/scripts/content.js"
       ],
       "run_at": "document_end"
-    }]
+    }
+  ]
 }
